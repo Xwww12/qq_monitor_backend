@@ -1,0 +1,14 @@
+qq:
+  # 监听的qq群号
+  group_id: ""
+server:
+  # 前端地址, 默认端口80或5173
+  frontend_address: ""
+  # 后端端口
+  port: 9000
+
+websocket:
+  # 和qq机器人websocket服务器连接的地址
+  uri: ""
+  # websocket服务器token
+  token: ""

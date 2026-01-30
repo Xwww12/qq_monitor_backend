@@ -1,0 +1,32 @@
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:9000/get-status
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:9000/hello/User
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:9000/get_last_speaker
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:9000/get_hour_msg_cnt
+Content-Type: application/json
+
+{
+    "limit": 24
+}
+###
+
+POST http://127.0.0.1:9000/get_day_msg_cnt
+Content-Type: application/json
+
+{
+    "limit": 24
+}
+###
