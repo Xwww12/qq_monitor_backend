@@ -1,3 +1,4 @@
+# 使用时将文件名改为config.yml
 qq:
   # 监听的qq群号
   group_id: ""
