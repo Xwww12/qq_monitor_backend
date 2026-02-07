@@ -1,10 +1,10 @@
 import random
-import threading
 from datetime import datetime, timedelta
 from database_manager import DBManager
 from logs import setup_logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from websocket_manager import send_group_msg
+import base64
 
 # 数据库对象
 db = DBManager()
@@ -44,13 +44,15 @@ async def save_day_data():
         top_sender = db.get_top_sender()
         emojis = ['😘', '👁👁', '💪🐷']
         weeks = ['周一', '周二', '周三', '疯狂木曜日', '周五', '周六', '周日']
+        # 消息带着的图片
+        img = get_image_cq('data/img/img1.png')
         if top_sender is not None:
             top_sender = dict(top_sender)
-            summary = f"{emojis[random.randint(0, len(emojis))]}今日时间完毕\n日期：{yesterday.strftime('%Y-%m-%d')}，{weeks[yesterday.weekday()]}\n总消息数：{total}\n水群冠军：🎉{top_sender['sender_name']}🎉({top_sender['count']}条)\n时间面板：http://yuudachi.icu/shi-jian"
+            summary = f"{emojis[random.randint(0, len(emojis) - 1)]}今日时间完毕\n日期：{yesterday.strftime('%Y-%m-%d')}，{weeks[yesterday.weekday()]}\n总消息数：{total}\n水群冠军：🎉{top_sender['sender_name']}🎉({top_sender['count']}条)\n时间面板：http://yuudachi.icu/shi-jian"
         else:
-            summary = f"{emojis[random.randint(0, len(emojis))]}今日时间完毕\n日期：{yesterday.strftime('%Y-%m-%d')}，{weeks[yesterday.weekday()]}\n总消息数：{total}\n时间面板：http://yuudachi.icu/shi-jian"
+            summary = f"{emojis[random.randint(0, len(emojis) - 1)]}今日时间完毕\n日期：{yesterday.strftime('%Y-%m-%d')}，{weeks[yesterday.weekday()]}\n总消息数：{total}\n时间面板：http://yuudachi.icu/shi-jian"
         # 往群里发送总结
-        await send_group_msg(summary)
+        await send_group_msg(summary + img)
         # 清空今日发言数
         db.clear_daily_rank()
 
@@ -58,9 +60,15 @@ async def save_day_data():
 def start_scheduler():
     scheduler.add_job(save_hour_data, 'cron', minute=0)  # 每小时整点
     scheduler.add_job(save_day_data, 'cron', hour=0, minute=1)  # 每天 00:01
-    # scheduler.add_job(save_day_data, 'interval', seconds=30)  # 测试用
+    # scheduler.add_job(save_day_data, 'interval', seconds=10)  # 测试用
 
     # 启动后台线程运行定时任务
     scheduler.start()
     log.info("⏰ 定时任务已在后台启动")
     return scheduler
+
+
+def get_image_cq(file_path):
+    with open(file_path, "rb") as f:
+        base64_data = base64.b64encode(f.read()).decode()
+    return f"[CQ:image,file=base64://{base64_data}]"
