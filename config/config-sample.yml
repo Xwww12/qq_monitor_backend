@@ -13,3 +13,6 @@ websocket:
   uri: ""
   # websocket服务器token
   token: ""
+
+openai:
+  api_key:

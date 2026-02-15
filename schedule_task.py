@@ -1,20 +1,15 @@
 import random
 from datetime import datetime, timedelta
-from database_manager import DBManager
-from logs import setup_logging
+from database_manager import db, chat_logger
+from logs import log
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from websocket_manager import send_group_msg
+from openai_api import sharp_take
 import base64
 
-# 数据库对象
-db = DBManager()
-
-# 打日志对象
-log = setup_logging()
 
 # 创建异步调度器
 scheduler = AsyncIOScheduler()
-
 
 def save_hour_data():
     log.info(f"[{datetime.now()}] 正在进行每小时数据汇总...")
@@ -44,15 +39,28 @@ async def save_day_data():
         top_sender = db.get_top_sender()
         emojis = ['😘', '👁👁', '💪🐷']
         weeks = ['周一', '周二', '周三', '疯狂木曜日', '周五', '周六', '周日']
-        # 消息带着的图片
-        img = get_image_cq('data/img/img1.png')
         if top_sender is not None:
             top_sender = dict(top_sender)
             summary = f"{emojis[random.randint(0, len(emojis) - 1)]}今日时间完毕\n日期：{yesterday.strftime('%Y-%m-%d')}，{weeks[yesterday.weekday()]}\n总消息数：{total}\n水群冠军：🎉{top_sender['sender_name']}🎉({top_sender['count']}条)\n时间面板：http://yuudachi.icu/shi-jian"
         else:
             summary = f"{emojis[random.randint(0, len(emojis) - 1)]}今日时间完毕\n日期：{yesterday.strftime('%Y-%m-%d')}，{weeks[yesterday.weekday()]}\n总消息数：{total}\n时间面板：http://yuudachi.icu/shi-jian"
+
+        # ai总结
+        chat_history = chat_logger.read_all_for_ai()
+        ai_summary = ""
+        if chat_history and chat_history != "":
+            print(chat_history)
+            ai_summary = sharp_take(chat_history)
+            summary += f"\n今日锐评：{ai_summary}"
+        # 清空聊天记录
+        chat_logger.clear_logs()
+
+        # 消息带着的表情包
+        img = get_image_cq('data/img/img1.png')
+        summary += img
+
         # 往群里发送总结
-        await send_group_msg(summary + img)
+        await send_group_msg(summary)
         # 清空今日发言数
         db.clear_daily_rank()
 
@@ -60,7 +68,7 @@ async def save_day_data():
 def start_scheduler():
     scheduler.add_job(save_hour_data, 'cron', minute=0)  # 每小时整点
     scheduler.add_job(save_day_data, 'cron', hour=0, minute=1)  # 每天 00:01
-    # scheduler.add_job(save_day_data, 'interval', seconds=10)  # 测试用
+    # scheduler.add_job(save_day_data, 'interval', seconds=60)  # 测试用
 
     # 启动后台线程运行定时任务
     scheduler.start()

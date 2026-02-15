@@ -1,6 +1,10 @@
 import sqlite3
 from datetime import datetime
+import os
+import csv
+from logs import log
 
+# 数据库操作对象
 class DBManager:
     def __init__(self, db_path="./data/dashboard.db"):
         self.db_path = db_path
@@ -157,3 +161,62 @@ class DBManager:
         """清空每日排行表"""
         with self._get_conn() as conn:
             conn.execute("DELETE FROM daily_rank")
+
+# 聊天记录操作对象
+class ChatLogger:
+    def __init__(self, file_path="data/chat_logs.csv"):
+        self.file_path = file_path
+        self.ensure_dir()
+
+    def ensure_dir(self):
+        """确保目录及文件存在"""
+        directory = os.path.dirname(self.file_path)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        # 如果文件不存在，初始化并写入表头
+        if not os.path.exists(self.file_path):
+            with open(self.file_path, mode='w', encoding='utf-8', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(["Time", "User", "Content"])  # 必须和 read_all_for_ai 里的 Key 对应
+
+    def log_message(self, user_name, content):
+        """追加写入一条消息"""
+        # 'a' 模式表示 append (追加)
+        # newline='' 防止 Windows 下出现多余空行
+        with open(self.file_path, mode='a', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            # 写入：时间, 用户名, 内容
+            time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            writer.writerow([time_str, user_name, content])
+
+    def clear_logs(self):
+        """清空所有记录"""
+        # 'w' 模式打开但不写入内容，会直接清空文件
+        with open(self.file_path, mode='w', encoding='utf-8', newline='') as f:
+            # 表头，重新写入
+            writer = csv.writer(f)
+            writer.writerow(["Time", "User", "Content"])
+        log.info(f"日志文件 {self.file_path} 已重置")
+
+    def read_all_for_ai(self):
+        """读取所有内容并格式化为 AI 需要的字符串"""
+        if not os.path.exists(self.file_path):
+            return ""
+
+        formatted_logs = []
+        with open(self.file_path, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            try:
+                for row in reader:
+                    # 使用 .get() 更加安全，如果找不到 Key 不会崩溃，而是返回 None
+                    user = row.get('User', '未知用户')
+                    content = row.get('Content', '')
+                    formatted_logs.append(f"{user}: {content}")
+            except Exception as e:
+                log.info(f"解析 CSV 出错: {e}")
+
+        return "\n".join(formatted_logs)
+
+# 单例
+db = DBManager()
+chat_logger = ChatLogger()

@@ -34,3 +34,6 @@ def setup_logging(name="MyDashboard", log_file="dashboard.log"):
     logger.addHandler(console_handler)
 
     return logger
+
+# 单例
+log = setup_logging()

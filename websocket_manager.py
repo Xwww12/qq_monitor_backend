@@ -1,15 +1,9 @@
-from logs import setup_logging
+from logs import log
 import json
 import websockets
-from database_manager import DBManager
+from database_manager import db, chat_logger
 import asyncio
 import yaml
-
-# 打日志对象
-log = setup_logging()
-
-# 数据库对象
-db = DBManager()
 
 # websocket连接对象
 ws = None
@@ -66,6 +60,14 @@ def process_data(message):
         db.increment_sender_count(sender_name)
         # 设置机器人状态
         db.set_bot_status(status=1)
+        # 保存聊天记录
+        chat_message = []
+        for msg in data['message']:
+            if msg['type'] == 'text':
+                chat_message.append(msg['data']['text'])
+            elif msg['type'] == 'image':
+                chat_message.append("[图片]")
+        chat_logger.log_message(sender_name, "".join(chat_message))
     else:
         log.info(f'未知类型消息：{data}')
 

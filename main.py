@@ -2,10 +2,10 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from database_manager import DBManager
+from database_manager import db
 from response_utils import ApiResponse
 from schedule_task import start_scheduler
-from logs import setup_logging
+from logs import log
 from websocket_manager import websocket_client_task
 import yaml
 
@@ -47,12 +47,6 @@ app.add_middleware(
     allow_methods=["*"],         # 允许所有方法 (GET, POST 等)
     allow_headers=["*"],         # 允许所有请求头
 )
-
-# 数据库操作对象
-db = DBManager()
-
-# 打日志对象
-log = setup_logging()
 
 # --- 提供给前端的 HTTP 接口 ---
 @app.get("/get_status")
