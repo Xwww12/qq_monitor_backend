@@ -49,7 +49,6 @@ async def save_day_data():
         chat_history = chat_logger.read_all_for_ai()
         ai_summary = ""
         if chat_history and chat_history != "":
-            print(chat_history)
             ai_summary = sharp_take(chat_history)
             summary += f"\n今日锐评：{ai_summary}"
         # 清空聊天记录
