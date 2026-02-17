@@ -203,19 +203,12 @@ class ChatLogger:
         if not os.path.exists(self.file_path):
             return ""
 
-        formatted_logs = []
-        with open(self.file_path, mode='r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            try:
-                for row in reader:
-                    # 使用 .get() 更加安全，如果找不到 Key 不会崩溃，而是返回 None
-                    user = row.get('User', '未知用户')
-                    content = row.get('Content', '')
-                    formatted_logs.append(f"{user}: {content}")
-            except Exception as e:
-                log.info(f"解析 CSV 出错: {e}")
-
-        return "\n".join(formatted_logs)
+        try:
+            with open(self.file_path, mode='r', encoding='utf-8') as f:
+                return f.read()  # 读取全部内容为一个字符串
+        except Exception as e:
+            log.info(f"读取文件失败: {e}")
+            return ""
 
 # 单例
 db = DBManager()
