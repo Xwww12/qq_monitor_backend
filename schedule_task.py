@@ -54,6 +54,9 @@ async def save_day_data():
         # 清空聊天记录
         chat_logger.clear_logs()
 
+        # 打日志
+        log.info(summary)
+
         # 消息带着的表情包
         img = get_image_cq('data/img/img1.png')
         summary += img
