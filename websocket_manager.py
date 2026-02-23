@@ -47,12 +47,14 @@ def process_data(message):
     data = json.loads(message)
     # 没有post_type的话就为None, 往群里发消息的返回里面没有post_type
     post_type = data.get('post_type')
+    notice_type = data.get('notice_type')
     # 判断数据类型
     if post_type == 'meta_event':
         if data['meta_event_type'] == 'heartbeat':
             # 心跳检测
             db.set_bot_status(status=1)
     elif post_type == 'message' and str(data['group_id']) == config['qq']['group_id']:
+        # 正常聊天消息
         # 消息数+1，且记录最后发言人
         sender_name = data['sender']['nickname'] if data['sender']['card'] == '' else data['sender']['card']
         db.update_current(count=db.get_current()['count'] + 1, sender_name=sender_name)
@@ -68,6 +70,9 @@ def process_data(message):
             elif msg['type'] == 'image':
                 chat_message.append("[图片]")
         chat_logger.log_message(sender_name, "".join(chat_message))
+    elif post_type == 'notice' and notice_type == 'group_msg_emoji_like':
+        # 给消息添加表情的事件
+        pass
     else:
         log.info(f'未知类型消息：{data}')
 
