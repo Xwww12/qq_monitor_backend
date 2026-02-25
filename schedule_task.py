@@ -58,7 +58,10 @@ async def save_day_data():
         log.info(summary)
 
         # 消息带着的表情包
-        img = get_image_cq('data/img/img1.png')
+        if yesterday.weekday() % 2 == 1:
+            img = get_image_cq('data/img/img1.png')
+        else:
+            img = get_image_cq('data/img/img2.png')
         summary += img
 
         # 往群里发送总结

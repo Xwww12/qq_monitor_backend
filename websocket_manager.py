@@ -71,7 +71,10 @@ def process_data(message):
                 chat_message.append("[图片]")
         chat_logger.log_message(sender_name, "".join(chat_message))
     elif post_type == 'notice' and notice_type == 'group_msg_emoji_like':
-        # 给消息添加表情的事件
+        # 给消息添加表情评论的事件
+        pass
+    elif post_type == 'notice' and notice_type == 'group_recall':
+        # 撤回消息事件
         pass
     else:
         log.info(f'未知类型消息：{data}')
